@@ -7,21 +7,66 @@ class ReseverRepository {
         try {
             const pool = await getPool();
             const result = await pool.request().query(`
-                DECLARE @today date = CAST(GETDATE() AS date);WITH r AS (SELECT end_usd AS usd,CASE WHEN made_lot_date IS NULL OR made_lot_date > @today THEN 0
-                    WHEN DATEADD(MONTH, 3, made_lot_date) > @today THEN 1
-                    WHEN DATEADD(MONTH, 6, made_lot_date) > @today THEN 2
-                    WHEN DATEADD(MONTH, 9, made_lot_date) > @today THEN 3
-                    WHEN DATEADD(MONTH, 12, made_lot_date) > @today THEN 4
-                    ELSE 5
-                END AS band
-            FROM dbo.bi_stock
-            WHERE st_name = N'保留仓 - Reserve Materials WH'),
-        bands AS (SELECT *FROM (VALUES        (1, '< 3 months'),        (2, '3–6 months'),        (3, '6–9 months'),        (4, '9–12 months'),        (5, '12+ months')) v(id, label))SELECT
-            b.label,COALESCE(SUM(r.usd), 0) AS usd,CAST(
-                100.0 * COALESCE(SUM(r.usd), 0)/ NULLIF((SELECT SUM(usd) FROM r), 0)AS decimal(10, 1)) AS percent_reserve,COUNT(r.band) AS line_count,    (SELECT COALESCE(SUM(usd), 0) FROM r) AS total_reserve_usd,    (SELECT COUNT(*) FROM r) AS total_reserve_lines
-        FROM bands b
-        LEFT JOIN r ON r.band = b.id
-        GROUP BY b.id, b.label ORDER BY b.id;
+                declare @today date = cast(getdate() as date);
+                with stock_data as (
+                    select
+                        end_usd as usd,
+                        made_lot_date,
+                        stock_in_date,
+                        case
+                            when stock_in_date is null then made_lot_date
+                            when made_lot_date is null then stock_in_date
+                            when stock_in_date < made_lot_date then stock_in_date
+                            else made_lot_date
+                        end as aging_date
+                    from dbo.bi_stock
+                    where st_name = N'保留仓 - Reserve Materials WH'
+                ),
+                r as (
+                    select
+                        usd,
+                        made_lot_date,
+                        stock_in_date,
+                        aging_date,
+                        case
+                            when aging_date is null
+                            or aging_date > @today then 0
+                            when dateadd(month, 3, aging_date) > @today then 1
+                            when dateadd(month, 6, aging_date) > @today then 2
+                            when dateadd(month, 9, aging_date) > @today then 3
+                            when dateadd(month, 12, aging_date) > @today then 4
+                            else 5
+                        end as band
+                    from stock_data
+                ),
+                bands as (
+                    select *
+                    from (values
+                        (1, '< 3 months'),
+                        (2, '3–6 months'),
+                        (3, '6–9 months'),
+                        (4, '9–12 months'),
+                        (5, '12+ months')
+                    ) v(id, label)
+                )
+                select
+                    b.label,
+                    coalesce(sum(r.usd), 0) as usd,
+                    cast(
+                        100.0 * coalesce(sum(r.usd), 0)
+                        / nullif((select sum(usd) from r), 0)
+                        as decimal(10, 1)
+                    ) as percent_reserve,
+                    count(r.band) as line_count,
+                    (select coalesce(sum(usd), 0) from r) as total_reserve_usd,
+                    (select count(*) from r) as total_reserve_lines
+                from bands b
+                left join r
+                    on r.band = b.id
+                group by
+                    b.id,
+                    b.label
+                order by b.id;
                 `)
             return result.recordset;
         } catch (error) {
@@ -32,23 +77,63 @@ class ReseverRepository {
         try {
             const pool = await getPool();
             const result = await pool.request().query(`
-                DECLARE @today date = CAST(GETDATE() AS date);WITH r AS (SELECT
-                        end_usd AS usd,
-                        made_lot_date AS lot_date
-                    FROM dbo.bi_stock
-                    WHERE st_name = N'保留仓 - Reserve Materials WH'AND made_lot_date <= @today
+                declare @today date = cast(getdate() as date);
+
+                with stock_data as (
+                    select
+                        end_usd as usd,
+                        case
+                            when stock_in_date is null then made_lot_date
+                            when made_lot_date is null then stock_in_date
+                            when stock_in_date < made_lot_date then stock_in_date
+                            else made_lot_date
+                        end as aging_date
+                    from dbo.bi_stock
+                    where st_name = N'保留仓 - Reserve Materials WH'
                 ),
-                bands AS (SELECT *FROM (VALUES        (1, '0–1 mo',   0,  1),        (2, '1–2 mo',   1,  2),        (3, '2–3 mo',   2,  3),        (4, '3–6 mo',   3,  6),        (5, '6–9 mo',   6,  9),        (6, '9–12 mo',  9, 12),        (7, '12+ mo',  12, NULL)) v(id, label, month_from, month_to))SELECT
-                    b.label,COALESCE(SUM(r.usd), 0) AS usd,    (SELECT COALESCE(SUM(usd), 0)FROM r
-                        WHERE DATEADD(MONTH, 6, lot_date) <= @today
-                    ) AS old_stock_usd,
+                r as (
+                    select
+                        usd,
+                        aging_date as lot_date
+                    from stock_data
+                    where aging_date <= @today
+                ),
+                bands as (
+                    select *
+                    from (values
+                        (1, '0–1 mo',   0,  1),
+                        (2, '1–2 mo',   1,  2),
+                        (3, '2–3 mo',   2,  3),
+                        (4, '3–6 mo',   3,  6),
+                        (5, '6–9 mo',   6,  9),
+                        (6, '9–12 mo',  9, 12),
+                        (7, '12+ mo',  12, null)
+                    ) v(id, label, month_from, month_to)
+                )
+                select
+                    b.label,
+
+                    coalesce(sum(r.usd), 0) as usd,
+
+                    (
+                        select coalesce(sum(usd), 0)
+                        from r
+                        where dateadd(month, 6, lot_date) <= @today
+                    ) as old_stock_usd,
+
                     count(r.lot_date) as lines
-                FROM bands b
-                LEFT JOIN r
-                    ON DATEADD(MONTH, b.month_from, r.lot_date) <= @today
-                AND (
-                    b.month_to IS NULL OR DATEADD(MONTH, b.month_to, r.lot_date) > @today
-   )GROUP BY b.id, b.label ORDER BY b.id;
+
+                from bands b
+                left join r
+                    on dateadd(month, b.month_from, r.lot_date) <= @today
+                and (
+                    b.month_to is null
+                    or dateadd(month, b.month_to, r.lot_date) > @today
+                )
+                group by
+                    b.id,
+                    b.label
+                order by b.id;
                 `)
             return result.recordset;
         } catch (error) {
@@ -59,15 +144,47 @@ class ReseverRepository {
         try {
             const pool = await getPool();
             const result = await pool.request().query(`
-                DECLARE @today date = CAST(GETDATE() AS date);WITH r AS (SELECT COALESCE(NULLIF(LTRIM(RTRIM(cust_name)), N''),N'-') AS buyer,ISNULL(end_usd, 0) AS usd
-                    FROM dbo.bi_stock
-                    WHERE st_name = N'保留仓 - Reserve Materials WH'AND DATEADD(MONTH, 6, made_lot_date) <= @today
-                )SELECT
-                    buyer,COUNT(*) AS line_count,SUM(usd) AS usd,CAST(
-                        100.0 * SUM(usd) / NULLIF(SUM(SUM(usd)) OVER (), 0)AS decimal(10, 1)) AS percent_old_stock,SUM(SUM(usd)) OVER () AS total_old_stock_usd,COUNT(*) OVER () AS buyer_count
-                FROM r
-                GROUP BY buyer
-                ORDER BY usd DESC;
+                declare @today date = cast(getdate() as date);
+
+                with stock_data as (
+                    select
+                        coalesce(
+                            nullif(ltrim(rtrim(cust_name)), N''),
+                            N'-'
+                        ) as buyer,
+                        isnull(end_usd, 0) as usd,
+                        made_lot_date,
+                        stock_in_date,
+                        case
+                            when stock_in_date is null then made_lot_date
+                            when made_lot_date is null then stock_in_date
+                            when stock_in_date < made_lot_date then stock_in_date
+                            else made_lot_date
+                        end as aging_date
+                    from dbo.bi_stock
+                    where st_name = N'保留仓 - Reserve Materials WH'
+                ),
+                r as (
+                    select
+                        buyer,
+                        usd
+                    from stock_data
+                    where dateadd(month, 6, aging_date) <= @today
+                )
+                select
+                    buyer,
+                    count(*) as line_count,
+                    sum(usd) as usd,
+                    cast(
+                        100.0 * sum(usd)
+                        / nullif(sum(sum(usd)) over (), 0)
+                        as decimal(10, 1)
+                    ) as percent_old_stock,
+                    sum(sum(usd)) over () as total_old_stock_usd,
+                    count(*) over () as buyer_count
+                from r
+                group by buyer
+                order by usd desc;
                 `)
             return result.recordset;
         } catch (error) {
@@ -80,25 +197,66 @@ class ReseverRepository {
         try {
             const pool = await getPool();
             const result = await pool.request().query(`
-                DECLARE @today date = CAST(GETDATE() AS date);SELECT
+                declare @today date = cast(getdate() as date);
+
+                with stock_data as (
+                    select
+                        st.goods_name,
+                        st.goods_type_desc,
+                        st.goods_no,
+                        st.made_lot,
+                        st.made_lot_date,
+                        st.stock_in_date,
+                        st.cust_name,
+                        st.end_usd,
+                        case
+                            when st.stock_in_date is null then st.made_lot_date
+                            when st.made_lot_date is null then st.stock_in_date
+                            when st.stock_in_date < st.made_lot_date then st.stock_in_date
+                            else st.made_lot_date
+                        end as aging_date
+                    from dbo.bi_stock st
+                    where st.st_name = N'保留仓 - Reserve Materials WH'
+                )
+                select
                     st.goods_name,
                     st.goods_type_desc,
                     st.goods_no,
                     st.made_lot,
-                    st.made_lot_date AS lot_date,
-                    st.cust_name AS buyer,
-                    r.reason_dl,CASE WHEN st.made_lot_date IS NULL OR st.made_lot_date > @today THEN N'Unknown'WHEN DATEADD(MONTH, 3, st.made_lot_date) > @today THEN N'< 3 months'WHEN DATEADD(MONTH, 6, st.made_lot_date) > @today THEN N'3–6 months'WHEN DATEADD(MONTH, 9, st.made_lot_date) > @today THEN N'6–9 months'WHEN DATEADD(MONTH, 12, st.made_lot_date) > @today THEN N'9–12 months'ELSE N'12+ months'END AS age_band,CAST(DATEDIFF(DAY, st.made_lot_date, @today) / 30.0
-                        AS decimal(10, 1)) AS age_months,
+                    st.aging_date as lot_date,
+                    st.cust_name as buyer,
+                    r.reason_dl,
 
-                    st.end_usd AS usd
+                    case
+                        when st.aging_date is null
+                        or st.aging_date > @today then N'Unknown'
+                        when dateadd(month, 3, st.aging_date) > @today then N'< 3 months'
+                        when dateadd(month, 6, st.aging_date) > @today then N'3–6 months'
+                        when dateadd(month, 9, st.aging_date) > @today then N'6–9 months'
+                        when dateadd(month, 12, st.aging_date) > @today then N'9–12 months'
+                        else N'12+ months'
+                    end as age_band,
 
-                FROM dbo.bi_stock st
-                OUTER APPLY (SELECT MAX(reason_dl) AS reason_dl
-                    FROM dbo.bi_stock_reason
-                    WHERE goods_no = st.goods_no
-                    AND made_lot = st.made_lot
+                    cast(
+                        datediff(day, st.aging_date, @today) / 30.0
+                        as decimal(10, 1)
+                    ) as age_months,
+
+                    st.end_usd as usd
+
+                from stock_data st
+
+                outer apply (
+                    select
+                        max(reason_dl) as reason_dl
+                    from dbo.bi_stock_reason
+                    where goods_no = st.goods_no
+                    and made_lot = st.made_lot
                 ) r
-                WHERE st.st_name = N'保留仓 - Reserve Materials WH'ORDER BY st.made_lot_date ASC, st.end_usd DESC;
+
+                order by
+                    st.aging_date asc,
+                    st.end_usd desc;
                 `)
             return result.recordset;
         } catch (error) {
