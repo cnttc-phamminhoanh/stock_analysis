@@ -1,36 +1,37 @@
 /* ==========================================================================
    Germton Group — Stock Analysis
-   BI dashboard language: light canvas, white cards, blue accents, pastel KPIs.
+   BI dashboard language: warm light canvas, white cards, denim-blue accents,
+   desaturated data colours. Structure kept; only the skin is custom.
    ========================================================================== */
 
 :root {
-  --bg: #f4f6f9;
+  --bg: #f5f6f8;
   --card-bg: #ffffff;
-  --line: #eaecf0;
-  --line-2: #f2f4f7;
+  --line: #e4e7ee;
+  --line-2: #f0f2f6;
 
-  --ink: #101828;
-  --ink-2: #344054;
-  --ink-3: #667085;
-  --ink-4: #667085;
-  --faint: #98a2b3;
-  --tick: #98a2b3;
+  --ink: #1b2432;
+  --ink-2: #333e4e;
+  --ink-3: #5d6b7d;
+  --ink-4: #5d6b7d;
+  --faint: #909baa;
+  --tick: #909baa;
 
-  --blue: #3b7bfa;
-  --blue-d: #2f6fe4;
-  --blue-50: #eef4ff;
-  --blue-100: #dbe7ff;
+  --blue: #3d63b8;
+  --blue-d: #32549b;
+  --blue-50: #edf1f9;
+  --blue-100: #dce3f2;
 
-  --teal: #22b8cf;
-  --teal-50: #e6f7f9;
-  --purple: #9b7bf0;
-  --purple-50: #f3ecfe;
-  --amber: #f0a020;
-  --amber-50: #fff5e2;
-  --red: #e35b53;
-  --red-50: #fdeceb;
-  --green: #22a06b;
-  --green-50: #e9f7ef;
+  --teal: #2a8f96;
+  --teal-50: #e5f3f4;
+  --purple: #7c6bb5;
+  --purple-50: #f1edf9;
+  --amber: #d98a1c;
+  --amber-50: #fdf3e0;
+  --red: #d1514b;
+  --red-50: #fbeceb;
+  --green: #2e8b63;
+  --green-50: #e8f4ec;
 
   --radius: 12px;
   --shadow: 0 1px 2px rgba(16, 24, 40, 0.04), 0 1px 3px rgba(16, 24, 40, 0.03);
@@ -250,7 +251,7 @@ button, input, select { font-family: inherit; }
 
 .bar-col:hover .bar { filter: brightness(1.06); }
 
-.bar-col.on .bar { outline: 2px solid rgba(59, 123, 250, 0.25); outline-offset: 2px; }
+.bar-col.on .bar { outline: 2px solid color-mix(in srgb, var(--blue) 30%, transparent); outline-offset: 2px; }
 
 .bar-val {
   position: absolute;
@@ -273,7 +274,7 @@ button, input, select { font-family: inherit; }
   flex: 1 1 0;
   text-align: center;
   font-size: 11.5px;
-  color: #667085;
+  color: var(--ink-3);
   line-height: 1.3;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -346,7 +347,7 @@ button, input, select { font-family: inherit; }
   flex: 0 0 auto;
   width: 38px;
   height: 38px;
-  border-radius: 50%;
+  border-radius: 12px;
   display: grid;
   place-items: center;
   background: var(--tint, var(--blue-50));
@@ -406,11 +407,11 @@ button, input, select { font-family: inherit; }
 .kpi-flag-link:hover { filter: brightness(0.96); box-shadow: 0 0 0 1px currentColor inset; }
 .kpi-flag-link:focus-visible { outline: 2px solid var(--blue); outline-offset: 1px; }
 
-.flag-hot { color: #b42318; background: var(--red-50); }
+.flag-hot { color: #a63c2e; background: var(--red-50); }
 
 .kpi-flag-blank { visibility: hidden; }
-.flag-warm { color: #b54708; background: var(--amber-50); }
-.flag-cool { color: #067647; background: var(--green-50); }
+.flag-warm { color: #a35a12; background: var(--amber-50); }
+.flag-cool { color: #1f7a4d; background: var(--green-50); }
 
 /* ---------- rank lists ---------- */
 
@@ -567,25 +568,27 @@ table.pivot {
 }
 
 table.pivot thead th {
-  background: var(--blue-d);
-  color: #fff;
+  background: #eef0f4;
+  color: var(--ink-2);
   font-weight: 600;
   font-size: 11px;
   padding: 7px 10px;
   text-align: left;
-  border-right: 1px solid rgba(255, 255, 255, 0.16);
+  border-top: 1px solid var(--line);
+  border-right: 1px solid var(--line);
+  border-bottom: 2px solid #c6cdd8;
 }
 
-table.pivot thead tr.groups th { background: var(--blue-d); }
-table.pivot thead tr.subs th { background: var(--blue); font-weight: 500; }
-table.pivot thead th.corner { background: var(--blue-d); }
-table.pivot thead th.grp { text-align: center; border-right: 1px solid rgba(255, 255, 255, 0.3); }
+table.pivot thead tr.groups th { background: #e4e8ee; }
+table.pivot thead tr.subs th { background: #eef0f4; font-weight: 500; }
+table.pivot thead th.corner { background: #e4e8ee; }
+table.pivot thead th.grp { text-align: center; border-right: 1px solid var(--line); }
 table.pivot thead th.sub { text-align: right; font-size: 10px; padding: 5px 7px; }
 
 table.pivot thead th.grp.month { font-size: 10.5px; padding: 6px 6px; letter-spacing: 0.01em; }
-table.pivot thead th.grp.month.latest { background: var(--blue); }
+table.pivot thead th.grp.month.latest { background: #dde4f0; color: var(--blue-d); }
 
-table.pivot thead th.yr-start { border-left: 1px solid rgba(255, 255, 255, 0.55); }
+table.pivot thead th.yr-start { border-left: 1px solid var(--line-2); }
 table.pivot td.cell.month-start { border-left: 1px solid var(--line-2); }
 
 table.pivot td.cell { padding-left: 7px; padding-right: 7px; }
@@ -650,7 +653,7 @@ table.pivot tr.total-row td:first-child {
 table.pivot td.cat-cell { color: var(--ink-2); font-weight: 500; white-space: nowrap; }
 table.pivot td.buyer-cell { color: var(--ink-3); white-space: nowrap; }
 table.pivot td.wcell .wh-2 { display: block; font-weight: 500; color: var(--faint); font-size: 10.5px; }
-table.pivot thead th.grp:last-child { border-left: 1px solid rgba(255, 255, 255, 0.3); }
+table.pivot thead th.grp:last-child { border-left: 1px solid var(--line-2); }
 table.pivot thead th.sub:last-child,
 table.pivot thead th.sub:nth-last-child(2) { font-weight: 600; }
 
@@ -737,7 +740,7 @@ table.detail thead th {
   position: sticky;
   top: 0;
   z-index: 2;
-  background: #f9fafb;
+  background: #eef0f4;
   color: var(--ink-3);
   font-weight: 700;
   font-size: 10.5px;
@@ -745,11 +748,28 @@ table.detail thead th {
   text-transform: uppercase;
   text-align: left;
   padding: 9px 10px;
-  border-bottom: 1px solid var(--line);
+  border-bottom: 2px solid #c6cdd8;
   white-space: nowrap;
 }
 
 table.detail thead th.num { text-align: right; }
+
+/* Cột đầu (Item) đóng băng khi cuộn ngang — giống bảng pivot */
+table.detail thead th:first-child {
+  position: sticky;
+  left: 0;
+  z-index: 3;
+  background: #eef0f4;
+  border-right: 1px solid var(--line);
+}
+table.detail tbody td:first-child {
+  position: sticky;
+  left: 0;
+  z-index: 1;
+  background: #fff;
+  box-shadow: 1px 0 0 var(--line-2);
+}
+table.detail tbody tr.row:hover td:first-child { background: #fff; }
 
 table.detail thead th.sortable { cursor: pointer; user-select: none; }
 table.detail thead th.sortable:hover { color: var(--ink-2); }
@@ -843,11 +863,11 @@ table.detail td.reserve-link-cell { white-space: nowrap; overflow-wrap: normal; 
   font-size: 11px;
   font-weight: 600;
 }
-.age-pill.hot { color: #b42318; background: var(--red-50); }
-.age-pill.cool { color: #067647; background: var(--green-50); }
+.age-pill.hot { color: #a63c2e; background: var(--red-50); }
+.age-pill.cool { color: #1f7a4d; background: var(--green-50); }
 
 .value-cell { font-weight: 600; }
-.value-cell.aged { color: #b42318; }
+.value-cell.aged { color: #a63c2e; }
 
 .pager {
   display: flex;

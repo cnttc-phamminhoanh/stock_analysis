@@ -20,7 +20,7 @@ export default defineConfig({
     port: 5173,
     // Dev only: forward API calls to the local Express server.
     proxy: {
-      '/api': 'http://127.0.0.1:3000',
+      '/api': 'http://127.0.0.1:2403',
     },
   },
 });

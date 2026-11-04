@@ -203,21 +203,7 @@ const DetailTable = ({
         <div className="table-scroll">
           <table className="detail detail-wide">
             <colgroup>
-              <col style={{ width: 400 }} /> {/* Item */}
-              <col style={{ width: 130 }} /> {/* Code */}
-              <col style={{ width: 170 }} /> {/* Lot / batch */}
-              <col style={{ width: 100 }} /> {/* Date */}
-              <col style={{ width: 190 }} /> {/* Warehouse */}
-              <col style={{ width: 120 }} /> {/* MO No. */}
-              <col style={{ width: 170 }} /> {/* Style */}
-              <col style={{ width: 120 }} /> {/* Buyer */}
-              <col style={{ width: 110 }} /> {/* Category */}
-              <col style={{ width: 180 }} /> {/* Stock Remark */}
-              <col style={{ width: 180 }} /> {/* PMC Remark */}
-              <col style={{ width: 160 }} /> {/* Reason */}
-              <col style={{ width: 60 }} /> {/* Age */}
-              <col style={{ width: 110 }} /> {/* Qty */}
-              <col style={{ width: 100 }} /> {/* Value */}
+              <col style={{ width: 400 }} /><col style={{ width: 130 }} /><col style={{ width: 170 }} /><col style={{ width: 100 }} /><col style={{ width: 190 }} /><col style={{ width: 120 }} /><col style={{ width: 170 }} /><col style={{ width: 120 }} /><col style={{ width: 110 }} /><col style={{ width: 180 }} /><col style={{ width: 180 }} /><col style={{ width: 160 }} /><col style={{ width: 60 }} /><col style={{ width: 110 }} /><col style={{ width: 100 }} />
             </colgroup>
             <thead>
               <tr>
