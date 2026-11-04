@@ -1,0 +1,33 @@
+# Tự động deploy khi có ai đó push code lên nhánh master
+# Runner là GitHub Actions runner chạy ngay trên máy chủ (self-hosted)
+# Đường dẫn code trên máy chủ: /home/it/stock_analysis
+name: Deploy Stock Analysis
+
+on:
+  push:
+    branches: [master]
+
+jobs:
+  deploy:
+    runs-on: self-hosted
+    steps:
+      - name: Pull code
+        run: |
+          cd /home/it/stock_analysis
+          git pull origin master
+
+      - name: Install package
+        run: |
+          cd /home/it/stock_analysis/server_BI
+          npm install
+
+      - name: Install and bundle UI
+        run: |
+          cd /home/it/stock_analysis/client
+          npm install
+          npm run build
+
+      - name: Restart server
+        run: |
+          cd /home/it/stock_analysis/server_BI
+          pm2 restart stock-api || pm2 start app.js --name stock-api
