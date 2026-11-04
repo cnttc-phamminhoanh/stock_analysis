@@ -44,7 +44,7 @@ interface DetailTableProps {
 interface SortHeaderProps {
   label: string;
   sortKey: SortKey;
-  sort: DetailSort;
+  sort: DetailSort | null;
   onSort: (key: SortKey) => void;
   className?: string;
 }
@@ -56,9 +56,9 @@ const SortHeader = ({
   onSort,
   className,
 }: SortHeaderProps) => {
-  const active = sort.key === sortKey;
+  const active = sort?.key === sortKey;
   const ariaSort: "ascending" | "descending" | "none" = active
-    ? sort.dir === "desc"
+    ? sort!.dir === "desc"
       ? "descending"
       : "ascending"
     : "none";
@@ -80,7 +80,7 @@ const SortHeader = ({
     >
       {label}
       <span className="arrow" aria-hidden="true">
-        {active ? (sort.dir === "desc" ? "↓" : "↑") : "↓"}
+        {active ? (sort.dir === "desc" ? "↓" : "↑") : "↕"}
       </span>
     </th>
   );
@@ -107,7 +107,7 @@ const DetailTable = ({
   const [search, setSearch] = useState("");
   const [searchBy, setSearchBy] = useState<SearchBy>("item");
   const [term, setTerm] = useState("");
-  const [sort, setSort] = useState<DetailSort>({ key: "usd", dir: "desc" });
+  const [sort, setSort] = useState<DetailSort | null>(null);
   const [page, setPage] = useState(1);
 
   useEffect(() => {
@@ -115,19 +115,10 @@ const DetailTable = ({
     return () => window.clearTimeout(timer);
   }, [search]);
 
+  // Chỉ về trang 1 khi đổi bộ lọc / tìm kiếm; đổi cách sắp xếp thì GIỮ nguyên trang hiện tại
   useEffect(() => {
     setPage(1);
-  }, [
-    scope.cust,
-    scope.wh,
-    scope.cat,
-    scope.age,
-    scope.year,
-    term,
-    searchBy,
-    sort.key,
-    sort.dir,
-  ]);
+  }, [scope.cust, scope.wh, scope.cat, scope.age, scope.year, term, searchBy]);
 
   const whItem = scope.wh >= 0 ? meta.warehouses[scope.wh] : undefined;
   const catItem = scope.cat >= 0 ? meta.categories[scope.cat] : undefined;
@@ -146,8 +137,8 @@ const DetailTable = ({
     year: scope.year >= 0 ? meta.years[scope.year] : undefined,
     ageMin: ageBound?.[0],
     ageMax: ageBound?.[1],
-    sort: sort.key,
-    dir: sort.dir,
+    sort: sort?.key,
+    dir: sort?.dir,
     page,
     pageSize: PAGE_SIZE,
   };
@@ -162,11 +153,14 @@ const DetailTable = ({
   const to = Math.min(safePage * PAGE_SIZE, total);
 
   const toggleSort = (key: SortKey): void => {
-    setSort((prev: DetailSort) =>
-      prev.key === key
-        ? { key, dir: prev.dir === "desc" ? "asc" : "desc" }
-        : { key, dir: "desc" },
-    );
+    setSort((prev: DetailSort | null) => {
+      // chưa chọn cột này: sắp giảm dần
+      if (!prev || prev.key !== key) return { key, dir: "desc" };
+      // đang giảm dần: đảo thành tăng dần
+      if (prev.dir === "desc") return { key, dir: "asc" };
+      // đang tăng dần: bỏ sắp xếp, về mặc định (theo ngày)
+      return null;
+    });
   };
 
   const clearAll = (): void => {
@@ -203,7 +197,7 @@ const DetailTable = ({
         <div className="table-scroll">
           <table className="detail detail-wide">
             <colgroup>
-              <col style={{ width: 400 }} /><col style={{ width: 130 }} /><col style={{ width: 170 }} /><col style={{ width: 100 }} /><col style={{ width: 190 }} /><col style={{ width: 120 }} /><col style={{ width: 170 }} /><col style={{ width: 120 }} /><col style={{ width: 110 }} /><col style={{ width: 180 }} /><col style={{ width: 180 }} /><col style={{ width: 160 }} /><col style={{ width: 60 }} /><col style={{ width: 110 }} /><col style={{ width: 100 }} />
+              <col style={{ width: 400 }} /><col style={{ width: 130 }} /><col style={{ width: 170 }} /><col style={{ width: 100 }} /><col style={{ width: 190 }} /><col style={{ width: 120 }} /><col style={{ width: 170 }} /><col style={{ width: 120 }} /><col style={{ width: 110 }} /><col style={{ width: 180 }} /><col style={{ width: 180 }} /><col style={{ width: 160 }} /><col style={{ width: 90 }} /><col style={{ width: 110 }} /><col style={{ width: 100 }} />
             </colgroup>
             <thead>
               <tr>

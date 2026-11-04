@@ -94,7 +94,7 @@ button, input, select { font-family: inherit; }
   align-items: flex-end;
   justify-content: space-between;
   gap: 24px;
-  padding: 22px 0 0;
+  padding: 22px var(--gutter) 0;
 }
 
 .pagehead h1 {
@@ -576,7 +576,7 @@ table.pivot thead th {
   text-align: left;
   border-top: 1px solid var(--line);
   border-right: 1px solid var(--line);
-  border-bottom: 2px solid #c6cdd8;
+  border-bottom: 1px solid #c6cdd8;
 }
 
 table.pivot thead tr.groups th { background: #e4e8ee; }
@@ -748,7 +748,7 @@ table.detail thead th {
   text-transform: uppercase;
   text-align: left;
   padding: 9px 10px;
-  border-bottom: 2px solid #c6cdd8;
+  border-bottom: 1px solid #c6cdd8;
   white-space: nowrap;
 }
 
@@ -757,10 +757,12 @@ table.detail thead th.num { text-align: right; }
 /* Cột đầu (Item) đóng băng khi cuộn ngang — giống bảng pivot */
 table.detail thead th:first-child {
   position: sticky;
+  top: 0;
   left: 0;
-  z-index: 3;
+  z-index: 5;
   background: #eef0f4;
   border-right: 1px solid var(--line);
+  border-bottom: 1px solid #c6cdd8;
 }
 table.detail tbody td:first-child {
   position: sticky;
@@ -771,10 +773,26 @@ table.detail tbody td:first-child {
 }
 table.detail tbody tr.row:hover td:first-child { background: #fff; }
 
-table.detail thead th.sortable { cursor: pointer; user-select: none; }
+table.detail thead th.sortable { cursor: pointer; user-select: none; padding-right: 22px; }
 table.detail thead th.sortable:hover { color: var(--ink-2); }
-table.detail thead th.sorted { color: var(--blue-d); }
-table.detail thead th .arrow { margin-left: 4px; opacity: 0.55; }
+table.detail thead th.sortable:hover .arrow { opacity: 1; }
+table.detail thead th.sorted {
+  color: var(--blue-d);
+  background: #e2e8f4;
+}
+table.detail thead th.sorted .arrow { opacity: 1; }
+table.detail thead th .arrow {
+  margin-left: 4px;
+  opacity: 0.8;
+  font-family: "Segoe UI Symbol", "Segoe UI", "Arial Unicode MS", sans-serif;
+}
+table.detail thead th.sortable .arrow {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  margin-left: 0;
+}
 
 table.detail tbody td {
   padding: var(--row-pad) 10px;

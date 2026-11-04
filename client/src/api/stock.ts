@@ -225,6 +225,8 @@ export const stockApi = {
       year: query.year,
       nameZh: query.category,
       name: query.buyer,
+      sort: query.sort,
+      dir: query.dir,
     });
     return toDetailResponse(raw, page, pageSize);
   },

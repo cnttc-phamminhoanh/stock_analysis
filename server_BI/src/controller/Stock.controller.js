@@ -52,7 +52,9 @@ exports.GetDetail = async (req, res, next) => {
             name: req.query.name,
             period: Number(req.query.period ?? 0),
             page: Number(req.query.page ?? 1),
-            pageSize: Number(req.query.pageSize ?? 25)
+            pageSize: Number(req.query.pageSize ?? 25),
+            sort: req.query.sort,
+            dir: req.query.dir
         };
         const items = await StockService.detail(data);
         return res.json(ApiSuccess.getSelect('detail', items))

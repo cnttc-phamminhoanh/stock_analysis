@@ -457,7 +457,9 @@ class StockRepository {
                 year,
                 nameZh,
                 name,
-                period
+                period,
+                sort,
+                dir
             } = filter
             const query = `SELECT
                 b.goods_name AS item,
@@ -539,6 +541,14 @@ class StockRepository {
                 )
             );
         `
+            // Sắp xếp động nhưng an toàn: chỉ nhận cột và chiều trong danh sách trắng
+            const SORT_COLUMNS = {
+                usd: "[end_usd]",
+                qty: "[end_qty]",
+                age: "[age_days]"
+            };
+            const sortCol = SORT_COLUMNS[sort] || "[date]";
+            const sortDir = dir === "asc" ? "ASC" : "DESC";
             return pagination({
                 query,
                 params: {
@@ -551,7 +561,7 @@ class StockRepository {
                 },
                 page,
                 pageSize,
-                orderBy: "[date] DESC"
+                orderBy: `${sortCol} ${sortDir}`
             })
         } catch (error) {
             throw error
