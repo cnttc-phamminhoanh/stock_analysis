@@ -205,7 +205,7 @@ const DetailTable = ({
             <colgroup>
               <col style={{ width: 400 }} /> {/* Item */}
               <col style={{ width: 130 }} /> {/* Code */}
-              <col style={{ width: 150 }} /> {/* Lot / batch */}
+              <col style={{ width: 170 }} /> {/* Lot / batch */}
               <col style={{ width: 100 }} /> {/* Date */}
               <col style={{ width: 190 }} /> {/* Warehouse */}
               <col style={{ width: 120 }} /> {/* MO No. */}
