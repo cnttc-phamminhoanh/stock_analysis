@@ -42,14 +42,14 @@ const WipView = () => {
     () =>
       dataset
         ? dataset.lots.map((lot: WipLotItem) => {
-            const customerName = normalizeBuyerName(lot.customerName);
-            const customerIdx = customers.indexOf(customerName);
-            return {
-              ...lot,
-              customerName,
-              customerIdx: customerIdx >= 0 ? customerIdx : lot.customerIdx,
-            };
-          })
+          const customerName = normalizeBuyerName(lot.customerName);
+          const customerIdx = customers.indexOf(customerName);
+          return {
+            ...lot,
+            customerName,
+            customerIdx: customerIdx >= 0 ? customerIdx : lot.customerIdx,
+          };
+        })
         : [],
     [dataset, customers],
   );
@@ -194,7 +194,7 @@ const WipView = () => {
       </Card>
 
       <div className="row-2">
-        <Card zh="在制时长分布" en="Time on Line">
+        <Card zh="在制时长分布" en="Time on Line" className="wip-chart-card">
           <WipHistogram
             summary={summary}
             focusWeek={focus.week}
@@ -202,7 +202,7 @@ const WipView = () => {
           />
         </Card>
 
-        <Card zh="红灯按客户" en="Red by Buyer" note={`${usd(summary.redUsd)} in red`}>
+        <Card zh="红灯按客户" en="Red by Buyer" note={`${usd(summary.redUsd)} in red`} className="red-buyer-card">
           <RedByBuyer
             summary={summary}
             customers={customers}
