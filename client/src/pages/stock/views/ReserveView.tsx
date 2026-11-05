@@ -112,14 +112,20 @@ const ReserveView = () => {
           <ReserveHistogram dataset={dataset} focus={focus} onPick={pick} />
         </Card>
 
-        <Card
-          zh="六个月以上按客户"
-          en="Old Stock by Buyer"
-          note={`${usd(dataset.atRiskUsd)} at or past 6 months`}
-          className="stack-card"
-        >
-          <ReserveByBuyer dataset={dataset} focus={focus} onPick={pick} />
-        </Card>
+        <div className="reserve-buyer-slot">
+          <Card
+            zh="六个月以上按客户"
+            en="Old Stock by Buyer"
+            note={`${usd(dataset.atRiskUsd)} at or past 6 months`}
+            className="stack-card reserve-buyer-card"
+          >
+            <ReserveByBuyer
+              dataset={dataset}
+              focus={focus}
+              onPick={pick}
+            />
+          </Card>
+        </div>
       </div>
 
       <Card

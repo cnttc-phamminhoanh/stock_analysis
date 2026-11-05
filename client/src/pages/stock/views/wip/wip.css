@@ -43,3 +43,19 @@
   font-size: 11.5px;
 }
 
+/* Hai Card tự cân bằng chiều cao */
+.wip-chart-card,
+.red-buyer-card {
+  height: auto;
+  min-height: 0;
+}
+
+/* Giữ danh sách khách hàng không bị giãn */
+.red-buyer-card .rank-list.fill {
+  height: auto;
+  max-height: 460px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  justify-content: flex-start;
+  align-content: flex-start;
+}

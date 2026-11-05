@@ -1487,3 +1487,63 @@ table.reg .item .nm { font-size: 10.5px; color: var(--ink-3); max-width: 320px; 
 }
 
 .viewopts .seg { align-self: flex-start; }
+
+/* đã chỉnh sửa */
+/* Wrapper không để danh sách kéo chiều cao Grid */
+.row-wip > .reserve-buyer-slot {
+  position: relative;
+  min-width: 0;
+  min-height: 0;
+}
+
+/* Card cao bằng chiều cao Grid do biểu đồ quyết định */
+.reserve-buyer-slot > .reserve-buyer-card {
+  position: absolute;
+  inset: 0;
+
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* Tiêu đề luôn cố định */
+.reserve-buyer-card .card-head {
+  flex-shrink: 0;
+}
+
+/* Danh sách khách hàng */
+.reserve-buyer-card .rank-list.fill {
+  flex: 1 1 auto;
+  min-height: 0;
+  height: auto;
+  max-height: none;
+
+  overflow-y: auto;
+  overflow-x: hidden;
+
+  justify-content: flex-start;
+  align-content: flex-start;
+  gap: 2px;
+
+  scrollbar-width: thin;
+}
+
+/* Giữ nguyên chiều cao các dòng */
+.reserve-buyer-card .rank-row {
+  flex-shrink: 0;
+}
+
+/* Responsive khi chuyển về một cột */
+@media (max-width: 1180px) {
+  .reserve-buyer-slot > .reserve-buyer-card {
+    position: static;
+    inset: auto;
+  }
+
+  .reserve-buyer-card .rank-list.fill {
+    flex: none;
+    max-height: 400px;
+  }
+}
