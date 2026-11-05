@@ -736,11 +736,18 @@ table.detail {
   font-size: 12px;
 }
 
+table.detail thead {
+  position: sticky;
+  top: 0;
+  z-index: 10;   /* một nền duy nhất cho cả header: đường kẻ đáy chỉ vẽ 1 lần, liền suốt bảng */
+  background: linear-gradient(#eef0f4 calc(100% - 1px), #c6cdd8 0);
+}
+
 table.detail thead th {
   position: sticky;
   top: 0;
   z-index: 2;
-  background: #eef0f4;
+  background: transparent;   /* để lộ nền thead — không tự vẽ đường nữa */
   color: var(--ink-3);
   font-weight: 700;
   font-size: 10.5px;
@@ -748,7 +755,6 @@ table.detail thead th {
   text-transform: uppercase;
   text-align: left;
   padding: 9px 10px;
-  border-bottom: 1px solid #c6cdd8;
   white-space: nowrap;
 }
 
@@ -759,15 +765,14 @@ table.detail thead th:first-child {
   position: sticky;
   top: 0;
   left: 0;
-  z-index: 5;
-  background: #eef0f4;
+  z-index: 30;   /* cao hơn mọi ô khác: luôn phủ hết khi cuộn ngang */
+  background: linear-gradient(#eef0f4 calc(100% - 1px), #c6cdd8 0);
   border-right: 1px solid var(--line);
-  border-bottom: 1px solid #c6cdd8;
 }
 table.detail tbody td:first-child {
   position: sticky;
   left: 0;
-  z-index: 1;
+  z-index: 20;   /* cao hơn các ô dữ liệu khác: phủ hết khi cuộn ngang */
   background: #fff;
   box-shadow: 1px 0 0 var(--line-2);
 }
@@ -778,7 +783,7 @@ table.detail thead th.sortable:hover { color: var(--ink-2); }
 table.detail thead th.sortable:hover .arrow { opacity: 1; }
 table.detail thead th.sorted {
   color: var(--blue-d);
-  background: #e2e8f4;
+  background: linear-gradient(#e2e8f4 calc(100% - 1px), #c6cdd8 0);
 }
 table.detail thead th.sorted .arrow { opacity: 1; }
 table.detail thead th .arrow {

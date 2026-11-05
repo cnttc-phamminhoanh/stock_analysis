@@ -1,6 +1,3 @@
-# Tự động deploy khi có ai đó push code lên nhánh master
-# Runner là GitHub Actions runner chạy ngay trên máy chủ (self-hosted)
-# Đường dẫn code trên máy chủ: /home/it/stock_analysis
 name: Deploy Stock Analysis
 
 on:
