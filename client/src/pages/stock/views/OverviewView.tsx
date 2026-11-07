@@ -38,6 +38,13 @@ interface Selection {
   year?: string;
 }
 
+interface LedgerSel {
+  warehouse?: string;
+  category?: string;
+  buyer?: string;
+  month?: string;
+}
+
 const OverviewSkeleton = () => (
   <main className="wrap stack" aria-busy="true">
     <div className="row-2">
@@ -105,12 +112,25 @@ const OverviewView = () => {
   const [sel, setSel] = useState<Selection>({});
   const [monthSpan, setMonthSpan] = useState(12);
 
+  const [ledgerSelection, setLedgerSelection] = useState<LedgerSel>({});
+  const [whSrc, setWhSrc] = useState<"summary" | "pivot">("summary");
+  const [catSrc, setCatSrc] = useState<"category" | "aged">("category");
+
+  const [pageMonth, setPageMonth] = useState<string | undefined>();
+
   // [ĐỔI] truyền object, BE lọc theo các tham số này
   const overview = useStockOverview({
     warehouse: sel.wh,
     nameZh: sel.cat,
     name: sel.cust,
     year: sel.year ? Number(sel.year) : undefined,
+    month: pageMonth,
+    ledgerWarehouse: ledgerSelection.warehouse,
+    ledgerCategory: ledgerSelection.category,
+    ledgerBuyer: ledgerSelection.buyer,
+    ledgerMonth: ledgerSelection.month,
+    whSrc: sel.wh ? whSrc : undefined,
+    catSrc: sel.cat ? catSrc : undefined,
   });
 
   const wipQuery = useWipDataset();
@@ -132,7 +152,11 @@ const OverviewView = () => {
   }, [overview.data, threshold, agedFrom]);
 
   // [ĐỔI] reset / clear theo state mới
-  const resetAll = (): void => setSel({});
+  const resetAll = (): void => {
+    setSel({});
+    setLedgerSelection({});
+    setPageMonth(undefined);
+  };
 
   const clearDimension = (dimension: ScopeDimension): void => {
     if (dimension === "age") return;
@@ -205,8 +229,90 @@ const OverviewView = () => {
 
   const setWh = pick("wh", whNames);
   const setCat = pick("cat", catNames);
+  // Kho chọn từ card Summary
+  const handleWh = (idx: number): void => {
+    setLedgerSelection({});
+    setWhSrc("summary");
+    setWh(idx);
+  };
+
+  // Kho chọn từ ô Warehouse trong pivot
+  const handlePivotWh = (idx: number): void => {
+    setLedgerSelection({});
+    setWhSrc("pivot");
+    setWh(idx);
+  };
+
+  // Category chọn từ biểu đồ Category / từ Aged Rank
+  const handleCatChart = (idx: number): void => {
+    setCatSrc("category");
+    setCat(idx);
+  };
+  const handleCatAged = (idx: number): void => {
+    setCatSrc("aged");
+    setCat(idx);
+  };
   const setCust = pick("cust", custNames);
-  const setYear = pick("year", yearNames);
+  const setYear = (idx: number): void => {
+    setPageMonth(undefined);
+    if (ledgerSelection.month) setLedgerSelection({});
+    pick("year", yearNames)(idx);
+  };
+
+  const toggleLedger = (next: LedgerSel): void => {
+    const same = (["warehouse", "category", "buyer", "month"] as const).every(
+      (k) => ledgerSelection[k] === next[k],
+    );
+    setLedgerSelection(same ? {} : next);
+    if (!same) {
+      setSel((s) => ({ ...s, wh: undefined }));
+    }
+  };
+
+  const handleLedgerCategory = (whIdx: number, catIdx: number): void =>
+    toggleLedger({
+      warehouse: model.meta.warehouses[whIdx]?.nameZh,
+      category: model.meta.categories[catIdx]?.nameZh,
+    });
+
+  const handleLedgerBuyer = (
+    whIdx: number,
+    catIdx: number,
+    custIdx: number,
+  ): void =>
+    toggleLedger({
+      warehouse: model.meta.warehouses[whIdx]?.nameZh,
+      category: model.meta.categories[catIdx]?.nameZh,
+      buyer: model.meta.customers[custIdx],
+    });
+
+  const handleLedgerMonth = (month: string): void => {
+    if (pageMonth === month) {
+      setPageMonth(undefined);
+      return;
+    }
+    setPageMonth(month);
+    setSel((s) => ({ ...s, year: undefined }));
+    if (ledgerSelection.month) setLedgerSelection({}); // bỏ ô Qty/USD của tháng khác
+  };
+
+  const handleLedgerCell = ({
+    wh: whIdx,
+    cat: catIdx,
+    cust: custIdx,
+    month,
+  }: {
+    wh: number;
+    cat: number;
+    cust: number;
+    month: string;
+  }): void =>
+    toggleLedger({
+      warehouse: model.meta.warehouses[whIdx]?.nameZh,
+      category: model.meta.categories[catIdx]?.nameZh,
+      buyer: model.meta.customers[custIdx],
+      month,
+    });
 
   // [ĐỔI] age luôn -1
   const scope: OverviewScope = { cust, wh, cat, age: -1, year };
@@ -234,7 +340,7 @@ const OverviewView = () => {
           <BarChart
             items={model.catBars}
             picked={cat}
-            onPick={setCat}
+            onPick={handleCatChart}
             muted={model.noCatUsd}
           />
         </Card>
@@ -250,7 +356,7 @@ const OverviewView = () => {
           rows={model.storeRows}
           meta={model.meta}
           whSel={wh}
-          onWh={setWh}
+          onWh={handleWh}
           wip={wipSummary}
           reserve={reserveSummary}
         />
@@ -272,7 +378,7 @@ const OverviewView = () => {
           className="rank-card"
         >
           {/* [ĐỔI] picked={cat} onPick={setCat} */}
-          <RankList rows={model.agedRows} picked={cat} onPick={setCat} alt />
+          <RankList rows={model.agedRows} picked={cat} onPick={handleCatAged} alt />
         </Card>
       </div>
 
@@ -304,9 +410,13 @@ const OverviewView = () => {
           wh={wh}
           cat={cat}
           cust={cust}
-          onWh={setWh}
-          onCat={setCat}
-          onCust={setCust}
+          onWh={handlePivotWh}
+          activeMonth={pageMonth}
+          onLedgerCategory={handleLedgerCategory}
+          onLedgerBuyer={handleLedgerBuyer}
+          onLedgerMonth={handleLedgerMonth}
+          onLedgerCell={handleLedgerCell}
+          ledgerSelection={ledgerSelection}
         />
       </Card>
 
@@ -318,6 +428,10 @@ const OverviewView = () => {
           model.scoped.lines == null ? null : Math.round(model.scoped.lines)
         }
         available={true}
+        ledgerSelection={{
+          ...ledgerSelection,
+          month: ledgerSelection.month ?? pageMonth,
+        }}
         onClear={clearDimension}
         onResetAll={resetAll}
       />

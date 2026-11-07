@@ -33,6 +33,9 @@ export interface StockDetailQuery {
   buyer?: string;
   code?: string;
   lot?: string;
+  ledgerCategory?: string;
+  ledgerBuyer?: string;
+  ledgerMonth?: string;
 }
 
 export interface OverviewQuery {
@@ -40,6 +43,13 @@ export interface OverviewQuery {
   year?: number;
   nameZh?: string; // category
   name?: string; // customer
+  month?: string;
+  ledgerWarehouse?: string;
+  ledgerCategory?: string;
+  ledgerBuyer?: string;
+  ledgerMonth?: string;
+  whSrc?: "summary" | "pivot";
+  catSrc?: "category" | "aged";
 }
 
 interface ApiErrorBody {
@@ -227,6 +237,9 @@ export const stockApi = {
       name: query.buyer,
       sort: query.sort,
       dir: query.dir,
+      ledgerCategory: query.ledgerCategory,
+      ledgerBuyer: query.ledgerBuyer,
+      ledgerMonth: query.ledgerMonth,
     });
     return toDetailResponse(raw, page, pageSize);
   },

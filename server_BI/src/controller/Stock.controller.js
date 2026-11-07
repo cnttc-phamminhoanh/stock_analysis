@@ -10,6 +10,15 @@ exports.GetOverview = async (req, res, next) => {
         const nameZh = req.query.nameZh;
         const name = req.query.name;
         const period = Number(req.query.period ?? 0);
+        const month = req.query.month;
+        const summaryMonth = req.query.ledgerMonth || month; 
+        const whFromPivot = req.query.whSrc === 'pivot';
+        const catFromAged = req.query.catSrc === 'aged'; 
+        const ledger = {
+            warehouse: req.query.ledgerWarehouse,
+            category: req.query.ledgerCategory,
+            buyer: req.query.ledgerBuyer,
+        };
 
         if ( year < 0 || period < 0) {
             return res.json(ApiError.BadRequest('year', 'Invalid year || period value. It must be a non-negative number.'));
@@ -22,12 +31,14 @@ exports.GetOverview = async (req, res, next) => {
             agedRank,
             monthWarehouseLedger
         ] = await Promise.all([
-            StockService.AnnualSummary(warehouse, year, nameZh, name, period),
-            StockService.CategorySummary(warehouse, year, nameZh, name, period),
-            StockService.WarehouseSummary(year, nameZh, name, period),
-            StockService.BuyerRank(warehouse, year, nameZh, name, period),
-            StockService.AgedRank(warehouse, year, nameZh, name, period),
-            StockService.monthWarehouseLedge(warehouse, year, nameZh, name, period),
+            StockService.AnnualSummary(warehouse, NaN, nameZh, name, period, summaryMonth, ledger),         
+            StockService.CategorySummary(warehouse, year, catFromAged ? nameZh : undefined, name, period, summaryMonth, ledger),
+            StockService.WarehouseSummary(
+                year, nameZh, name, period, summaryMonth,
+                { ...ledger, warehouse: ledger.warehouse || (whFromPivot ? warehouse : undefined) }),  
+            StockService.BuyerRank(warehouse, year, nameZh, undefined, period, summaryMonth, ledger),        
+            StockService.AgedRank(warehouse, year, catFromAged ? undefined : nameZh, name, period, summaryMonth, ledger),
+            StockService.monthWarehouseLedge(whFromPivot ? null : warehouse, year, nameZh, name, period), 
         ])
 
         return res.json(ApiSuccess.getSelect('overview', {
@@ -54,7 +65,10 @@ exports.GetDetail = async (req, res, next) => {
             page: Number(req.query.page ?? 1),
             pageSize: Number(req.query.pageSize ?? 25),
             sort: req.query.sort,
-            dir: req.query.dir
+            dir: req.query.dir,
+            ledgerCategory: req.query.ledgerCategory,
+            ledgerBuyer: req.query.ledgerBuyer,
+            ledgerMonth: req.query.ledgerMonth,
         };
         const items = await StockService.detail(data);
         return res.json(ApiSuccess.getSelect('detail', items))

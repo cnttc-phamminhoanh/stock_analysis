@@ -1,9 +1,9 @@
 
 const StockRepository = require('../repository/Stock.repository')
 class StockService {
-    async AnnualSummary(warehouse, year, nameZh, name, period) {
+    async AnnualSummary(warehouse, year, nameZh, name, period, month, ledger) {
         try {
-            const items = await StockRepository.AnnualSummary(warehouse, year, nameZh, name, period);
+            const items = await StockRepository.AnnualSummary(warehouse, year, nameZh, name, period, month, ledger);
             let totalUsd = 0
             items.forEach(element => {
                 totalUsd += element.usd
@@ -14,9 +14,9 @@ class StockService {
         }
     }
 
-    async CategorySummary(warehouse, year, nameZh, name, period) {
+    async CategorySummary(warehouse, year, nameZh, name, period, month, ledger) {
         try {
-            const items = await StockRepository.CategorySummary(warehouse, year, nameZh, name, period);
+            const items = await StockRepository.CategorySummary(warehouse, year, nameZh, name, period, month, ledger);
             let totalUsd = 0
             items.forEach(element => {
                 totalUsd += element.usd
@@ -26,26 +26,26 @@ class StockService {
             throw error
         }
     }
-    async WarehouseSummary(year, nameZh, name, period) {
+    async WarehouseSummary(year, nameZh, name, period, month, ledger) {
         try {
-            const items = await StockRepository.WarehouseSummary(year, nameZh, name, period);
+            const items = await StockRepository.WarehouseSummary(year, nameZh, name, period, month, ledger);
             return { items }
         } catch (error) {
             throw error
         }
     }
-    async BuyerRank(warehouse, year, nameZh, name, period) {
+    async BuyerRank(warehouse, year, nameZh, name, period, month, ledger) {
         try {
-            const items = await StockRepository.BuyerRank(warehouse, year, nameZh, name, period);
+            const items = await StockRepository.BuyerRank(warehouse, year, nameZh, name, period, month, ledger);
             return { items }
         } catch (error) {
             throw error
         }
     }
-    async AgedRank(warehouse, year, nameZh, name, period) {
+    async AgedRank(warehouse, year, nameZh, name, period, month, ledger) {
         try {
 
-            const items = await StockRepository.AgedRank(warehouse, year, nameZh, name, period);
+            const items = await StockRepository.AgedRank(warehouse, year, nameZh, name, period, month, ledger);
             const threshold = 90
             return { threshold, items }
         } catch (error) {

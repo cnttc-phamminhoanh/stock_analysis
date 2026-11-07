@@ -37,6 +37,13 @@ interface DetailTableProps {
   threshold: number;
   scopeLines: number | null;
   available?: boolean;
+  ledgerSelection?: {
+    warehouse?: string;
+    category?: string;
+    buyer?: string;
+    month?: string;
+  };
+
   onClear: (dimension: ScopeDimension) => void;
   onResetAll: () => void;
 }
@@ -101,6 +108,7 @@ const DetailTable = ({
   threshold,
   scopeLines,
   available = true,
+  ledgerSelection,
   onClear,
   onResetAll,
 }: DetailTableProps) => {
@@ -118,7 +126,19 @@ const DetailTable = ({
   // Chỉ về trang 1 khi đổi bộ lọc / tìm kiếm; đổi cách sắp xếp thì GIỮ nguyên trang hiện tại
   useEffect(() => {
     setPage(1);
-  }, [scope.cust, scope.wh, scope.cat, scope.age, scope.year, term, searchBy]);
+  }, [
+    scope.cust,
+    scope.wh,
+    scope.cat,
+    scope.age,
+    scope.year,
+    term,
+    searchBy,
+    ledgerSelection?.warehouse,
+    ledgerSelection?.category,
+    ledgerSelection?.buyer,
+    ledgerSelection?.month,
+  ]);
 
   const whItem = scope.wh >= 0 ? meta.warehouses[scope.wh] : undefined;
   const catItem = scope.cat >= 0 ? meta.categories[scope.cat] : undefined;
@@ -130,13 +150,27 @@ const DetailTable = ({
     item: searchBy === "item" ? term || undefined : undefined,
     code: searchBy === "code" ? term || undefined : undefined,
     lot: searchBy === "lot" ? term || undefined : undefined,
-    // gõ trong ô tìm Buyer thì ưu tiên từ khóa, nếu không thì dùng buyer đã click
-    buyer: searchBy === "buyer" && term ? term : clickedBuyer,
-    warehouse: whItem ? whItem.rawName || whItem.nameZh : undefined,
-    category: catItem?.nameZh,
+
+    // Ưu tiên lựa chọn từ PivotTable
+    buyer:
+      ledgerSelection?.buyer ||
+      (searchBy === "buyer" && term ? term : clickedBuyer),
+
+    warehouse:
+      ledgerSelection?.warehouse ||
+      (whItem ? whItem.rawName || whItem.nameZh : undefined),
+
+    category: ledgerSelection?.category || catItem?.nameZh,
+
     year: scope.year >= 0 ? meta.years[scope.year] : undefined,
     ageMin: ageBound?.[0],
     ageMax: ageBound?.[1],
+
+    // Các tham số drill-down từ PivotTable
+    ledgerCategory: ledgerSelection?.category,
+    ledgerBuyer: ledgerSelection?.buyer,
+    ledgerMonth: ledgerSelection?.month,
+
     sort: sort?.key,
     dir: sort?.dir,
     page,
@@ -197,7 +231,21 @@ const DetailTable = ({
         <div className="table-scroll">
           <table className="detail detail-wide">
             <colgroup>
-              <col style={{ width: 400 }} /><col style={{ width: 130 }} /><col style={{ width: 170 }} /><col style={{ width: 100 }} /><col style={{ width: 190 }} /><col style={{ width: 120 }} /><col style={{ width: 170 }} /><col style={{ width: 120 }} /><col style={{ width: 110 }} /><col style={{ width: 180 }} /><col style={{ width: 180 }} /><col style={{ width: 160 }} /><col style={{ width: 90 }} /><col style={{ width: 110 }} /><col style={{ width: 100 }} />
+              <col style={{ width: 400 }} />
+              <col style={{ width: 130 }} />
+              <col style={{ width: 170 }} />
+              <col style={{ width: 100 }} />
+              <col style={{ width: 190 }} />
+              <col style={{ width: 120 }} />
+              <col style={{ width: 170 }} />
+              <col style={{ width: 120 }} />
+              <col style={{ width: 110 }} />
+              <col style={{ width: 180 }} />
+              <col style={{ width: 180 }} />
+              <col style={{ width: 160 }} />
+              <col style={{ width: 90 }} />
+              <col style={{ width: 110 }} />
+              <col style={{ width: 100 }} />
             </colgroup>
             <thead>
               <tr>
