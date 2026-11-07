@@ -586,7 +586,7 @@ table.pivot thead th.grp { text-align: center; border-right: 1px solid var(--lin
 table.pivot thead th.sub { text-align: right; font-size: 10px; padding: 5px 7px; }
 
 table.pivot thead th.grp.month { font-size: 10.5px; padding: 6px 6px; letter-spacing: 0.01em; }
-table.pivot thead th.grp.month.latest { background: #dde4f0; color: var(--blue-d); }
+/* table.pivot thead th.grp.month.latest { background: #dde4f0; color: var(--blue-d); } */
 
 table.pivot thead th.yr-start { border-left: 1px solid var(--line-2); }
 table.pivot td.cell.month-start { border-left: 1px solid var(--line-2); }
@@ -655,7 +655,116 @@ table.pivot td.buyer-cell { color: var(--ink-3); white-space: nowrap; }
 table.pivot td.wcell .wh-2 { display: block; font-weight: 500; color: var(--faint); font-size: 10.5px; }
 table.pivot thead th.grp:last-child { border-left: 1px solid var(--line-2); }
 table.pivot thead th.sub:last-child,
-table.pivot thead th.sub:nth-last-child(2) { font-weight: 600; }
+table.pivot thead th.sub:nth-last-child(2) { font-weight: 700; }
+
+/* Các ô có thể click để lọc trong Warehouse Ledger */
+.pivot .wcell,
+.pivot .cat-cell,
+.pivot .buyer-cell,
+.pivot .ledger-cell:not(.empty),
+.pivot .ledger-month-btn {
+  cursor: pointer;
+}
+
+.pivot .wcell:hover,
+.pivot .cat-cell:hover,
+.pivot .buyer-cell:hover,
+.pivot .ledger-cell:not(.empty):hover,
+.pivot .ledger-month-btn:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-thickness: 1px;
+}
+
+/* Ô rỗng ("–") không lọc được */
+.pivot .ledger-cell.empty {
+  cursor: default;
+}
+
+/* Hỗ trợ bàn phím */
+.pivot .wcell:focus-visible,
+.pivot .cat-cell:focus-visible,
+.pivot .buyer-cell:focus-visible,
+.pivot .ledger-cell:focus-visible,
+.pivot .ledger-month-btn:focus-visible {
+  outline: 2px solid var(--blue, #2563eb);
+  outline-offset: -2px;
+}
+
+/* Nút tháng: bỏ style mặc định của button để underline hiện rõ */
+.pivot .ledger-month-btn {
+  background: none;
+  border: 0;
+  padding: 0;
+  font: inherit;
+  color: inherit;
+}
+
+.ledger-month-btn {
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-weight: inherit;
+  cursor: pointer;
+  padding: 0;
+}
+
+.ledger-month-btn:hover {
+  text-decoration: underline;
+}
+
+/* Màu "đang chọn" dùng chung, khớp .kpi.on của Warehouse Summary */
+table.pivot {
+  --sel-bg: var(--blue-50);
+  --sel-ring: #7fa6ee;
+  --sel-fg: var(--blue-d);
+}
+
+table.pivot td.wcell[aria-pressed="true"],
+table.pivot td.cat-cell[aria-pressed="true"],
+table.pivot td.buyer-cell[aria-pressed="true"],
+table.pivot td.ledger-cell.is-selected,
+table.pivot thead th.grp.month.is-active {
+  background: var(--sel-bg);
+  color: var(--sel-fg);
+  font-weight: 600;
+}
+
+/* wcell là sticky nên cần giữ thêm đường kẻ phải */
+/* table.pivot td.wcell[aria-pressed="true"] {
+  box-shadow: inset 0 0 0 1px var(--sel-ring), 1px 0 0 var(--line-2);
+} */
+
+/* Nút tháng kế thừa màu của ô, tô kín cả ô */
+table.pivot thead th.grp.month .ledger-month-btn {
+  display: block;
+  width: 100%;
+  padding: 0;
+}
+table.pivot thead th.grp.month.is-active .ledger-month-btn {
+  color: var(--sel-fg);
+  font-weight: 700;
+}
+
+/* Hover có gạch chân (đã có), thêm nền nhẹ cho ô Qty/USD */
+table.pivot td.ledger-cell:not(.empty):not(.is-selected):hover {
+  background: var(--blue-100);
+}
+
+/* Ô đang chọn thì không cần gạch chân khi hover */
+table.pivot td[aria-pressed="true"]:hover,
+table.pivot td.ledger-cell.is-selected:hover {
+  text-decoration: none;
+}
+
+.ledger-cell {
+  cursor: pointer;
+}
+
+.ledger-cell:hover {
+  background: rgba(59, 130, 246, 0.12);
+}
 
 .sheet-foot {
   display: flex;
