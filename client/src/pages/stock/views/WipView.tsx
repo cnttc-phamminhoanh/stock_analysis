@@ -27,6 +27,7 @@ import type { LotTag, LotTagMap, WipChip, WipFocus, WipFocusDim, WipSort, WipTag
 import './wip/wip.css';
 
 const WipView = () => {
+  const [exportContainer, setExportContainer] = useState<HTMLDivElement | null>(null);
   const wipQuery = useWipDataset();
   const updateTag = useUpdateWipTag();
 
@@ -216,9 +217,15 @@ const WipView = () => {
         zh="红灯登记表"
         en="Cross-filtered Register"
         note={chips.length > 0 ? `${num(focusedLots.length)} of ${num(lots.length)} lots match` : undefined}
-        headRight={<SortSeg sort={sort} onChange={setSort} />}
+        headRight={
+          <>
+            <SortSeg sort={sort} onChange={setSort} />
+            <div ref={setExportContainer} />
+          </>
+        }
       >
         <WipRegister
+          exportContainer={exportContainer}
           lots={focusedLots}
           tags={tags}
           pending={pending}

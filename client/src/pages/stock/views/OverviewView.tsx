@@ -105,6 +105,7 @@ const oldestOf = (rows: ReserveRowRaw[]) => {
 };
 
 const OverviewView = () => {
+  const [ledgerExportContainer, setLedgerExportContainer] = useState<HTMLDivElement | null>(null);
   const { threshold, agedFrom } = useViewOptions();
 
   // [XÓA] whName/setWhName và 5 useState số: cust, wh, cat, age, year
@@ -386,6 +387,7 @@ const OverviewView = () => {
         zh="月份明细"
         en="Month × Warehouse Ledger"
         headRight={
+          <>
           <div className="seg seg-sm" role="group" aria-label="Month span">
             {MONTH_SPANS.map((option: MonthSpanOption) => (
               <button
@@ -399,9 +401,12 @@ const OverviewView = () => {
               </button>
             ))}
           </div>
+          <div ref={setLedgerExportContainer} />
+          </>
         }
       >
         <PivotTable
+          exportContainer={ledgerExportContainer}
           stores={model.pivotStores}
           meta={model.meta}
           axis={model.axis}

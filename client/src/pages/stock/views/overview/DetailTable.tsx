@@ -9,6 +9,9 @@ import { useStockDetail } from "../../hooks/useStockData";
 import { num, usd } from "../../lib/format";
 import { storeStyle } from "../../lib/store";
 import DetailTools from "./DetailTools";
+import ExportExcelButton from '../../components/ExportExcelButton';
+import { EXPORT_LIMIT, colorCell, type ExportRow } from '../../lib/exportExcel';
+import { stockApi } from '../../../../api/stock';
 import ScopeChips from "./ScopeChips";
 import type { OverviewScope, ScopeDimension } from "./scope";
 import { STOCK_AGE_BOUNDS } from "@shared/api.interface";
@@ -207,15 +210,55 @@ const DetailTable = ({
     <Card
       zh="库存明细"
       en="Stock Detail"
+      className="stock-detail-card"
       headRight={
-        <>
+        <div className="stock-detail-tools">
           <DetailTools
             search={search}
             onSearch={setSearch}
             shown={available ? total : null}
             total={scopeLines}
           />
-        </>
+          <ExportExcelButton
+            columns={[
+              { header: 'Item 物料', width: 50 }, { header: 'Code 编码' },
+              { header: 'Lot / batch 批次' }, { header: 'Date' }, { header: 'Warehouse 仓库', width: 32 },
+              { header: 'MO No.' }, { header: 'Style' }, { header: 'Buyer 客户' },
+              { header: 'Category 品类' }, { header: 'Stock Remark', width: 36 },
+              { header: 'PMC Remark', width: 36 }, { header: 'Reason 原因', width: 36 },
+              { header: 'Age (d)', numFmt: '#,##0' }, { header: 'Qty' },
+              { header: 'Value', numFmt: '$#,##0' },
+            ]}
+            name="库存批次明细 Lot Details"
+            disabled={!available || detail.isPending || detail.isError || total === 0}
+            format={(sheet, rows) => {
+              sheet.views = [{ state: 'frozen', xSplit: 1, ySplit: 1 }];
+              rows.forEach((row, index) => {
+                const aged = Number(row[12]) > threshold;
+                colorCell(sheet, index + 2, 13, aged ? '#c0301f' : '#12855a');
+                if (aged) colorCell(sheet, index + 2, 15, '#c0301f');
+              });
+            }}
+            getRows={async () => {
+              const rows: ExportRow[] = [];
+              const batchSize = 500;
+              for (let pageNo = 1; rows.length < EXPORT_LIMIT; pageNo += 1) {
+                const result = await stockApi.detail({ ...query, page: pageNo, pageSize: batchSize });
+                for (const line of result.items) {
+                  rows.push([
+                    line.itemName, line.goodsNo, line.batchNo || '—', line.lotDate || '—',
+                    line.warehouseZh, line.moNo || '—', line.custStyle || '—', line.customerName,
+                    line.categoryZh, line.rem || '—', line.pmcRem || '—',
+                    line.reasonDl || line.reasonWh || 'Not recorded', Math.round(line.ageDays),
+                    `${num(line.qty)} ${line.unit}`.trim(), line.usd,
+                  ]);
+                }
+                if (!result.items.length || rows.length >= result.total) break;
+              }
+              return rows.slice(0, EXPORT_LIMIT);
+            }}
+          />
+        </div>
       }
     >
       <ScopeChips
