@@ -1656,3 +1656,57 @@ table.reg .item .nm { font-size: 10.5px; color: var(--ink-3); max-width: 320px; 
     max-height: 400px;
   }
 }
+.excel-export { display: inline-flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.excel-export-button:disabled { opacity: .5; cursor: default; }
+.excel-export [role="alert"] { color: #c53030; font-size: 12px; }
+
+.stock-detail-card .card-head-right {
+  flex: 0 1 466px;
+  margin-left: auto;
+  min-width: 0;
+  max-width: 100%;
+}
+.stock-detail-tools {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-width: 0;
+}
+.stock-detail-tools .search {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.stock-detail-tools .search input:focus-visible { outline: 2px solid #2563EB; outline-offset: 2px; }
+.stock-detail-tools .excel-export { flex: 0 0 auto; }
+.excel-export-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 34px;
+  width: auto;
+  box-sizing: border-box;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 8px;
+  background: #2563EB;
+  color: #fff;
+  font-family: var(--sans);
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  cursor: pointer;
+  box-shadow: 0 1px 2px rgb(37 99 235 / 15%);
+  white-space: nowrap;
+  transition: background-color 160ms ease;
+}
+.excel-export-button:hover:not(:disabled) { background: #1D4ED8; }
+.excel-export-button:focus-visible { outline: 2px solid #2563EB; outline-offset: 3px; }
+.excel-export-button svg { width: 14px; height: 14px; flex-shrink: 0; }
+@media (max-width: 640px) {
+  .stock-detail-card .card-head-right { flex-basis: 100%; }
+  .stock-detail-tools { gap: 8px; }
+}

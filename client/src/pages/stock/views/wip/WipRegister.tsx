@@ -1,3 +1,6 @@
+import { colorCell } from '../../lib/exportExcel';
+import { createPortal } from 'react-dom';
+import ExportExcelButton from '../../components/ExportExcelButton';
 import { useEffect, useMemo, useState } from 'react';
 import type { ChangeEvent } from 'react';
 
@@ -20,6 +23,7 @@ interface FilterOption {
 const PAGE_SIZE = 20;
 
 interface WipRegisterProps {
+  exportContainer: HTMLDivElement | null;
   lots: WipLotItem[];
   tags: LotTagMap;
   pending: Record<string, boolean>;
@@ -46,6 +50,7 @@ const buildPageList = (pageCount: number, current: number): (number | 'gap')[] =
 };
 
 const WipRegister = ({
+  exportContainer,
   lots,
   tags,
   pending,
@@ -130,6 +135,42 @@ const WipRegister = ({
 
   return (
     <div>
+      {exportContainer ? createPortal(
+        <ExportExcelButton name="WIP Lot Details" disabled={view.length === 0}
+          columns={[
+            { header: 'Days', numFmt: '0" d"' }, { header: 'Lot date' }, { header: 'MO No.' },
+            { header: 'Item', width: 50 }, { header: 'Buyer' }, { header: 'Qty' },
+            { header: 'Value', numFmt: '$#,##0' }, { header: 'Cause of red', width: 32 }, { header: 'Blue' },
+          ]}
+          format={(sheet, rows) => {
+            rows.forEach((row, index) => {
+              const light = LIGHT_META[lightOf(Number(row[0]))];
+              const blue = row[8] === 'Blue';
+              if (blue) sheet.getRow(index + 2).eachCell({ includeEmpty: true }, (cell) => {
+                cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFEAF1FF' } };
+              });
+              colorCell(sheet, index + 2, 1, light.color);
+              sheet.getCell(index + 2, 1).fill = { type: 'pattern', pattern: 'none' };
+              if (blue) colorCell(sheet, index + 2, 9, '#2a6fdb', '#eaf1ff');
+              sheet.getRow(index + 2).height = 38;
+              const item = sheet.getCell(index + 2, 4);
+              const text = String(row[3] ?? '');
+              const split = text.indexOf('\n');
+              item.value = { richText: [
+                { text: split < 0 ? text : text.slice(0, split), font: { name: 'Arial', size: 10, bold: true } },
+                ...(split < 0 ? [] : [{ text: text.slice(split), font: { name: 'Arial', size: 10, bold: false, color: { argb: 'FF5D6B7D' } } }]),
+              ] };
+            });
+          }}
+          getRows={() => view.map((lot) => {
+            const tag = tagFor(tags, lot.id);
+            const cause = WIP_CAUSES.find((item) => item.key === tag.cause);
+            return [lot.days, lot.lotDate || '—', lot.moNo || '—',
+              `${lot.goodsNo}\n${lot.itemName}`, lot.customerName,
+              `${num(lot.qty)} ${lot.unit}`.trim(), lot.usd,
+              cause ? `${cause.zh} · ${cause.name}` : '—', isBlueLot(tag) ? 'Blue' : '—'];
+          })} />
+      , exportContainer) : null}
       {chips.length > 0 ? (
         <div className="xfilter" role="status">
           <span className="xfilter-lead">Cross-filter</span>

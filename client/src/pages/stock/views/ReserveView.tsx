@@ -23,6 +23,7 @@ import {
 import type { ReserveBalance, ReserveChip, ReserveDim, ReserveFocus } from './reserve/focus';
 
 const ReserveView = () => {
+  const [exportContainer, setExportContainer] = useState<HTMLDivElement | null>(null);
   const { data, isLoading, error, refetch } = useReserveDataset();
   const [focus, setFocus] = useState<ReserveFocus>(EMPTY_FOCUS);
 
@@ -131,8 +132,10 @@ const ReserveView = () => {
       <Card
         zh="保留仓明细"
         en="Cross-filtered Register"
+        headRight={<div ref={setExportContainer} />}
       >
         <ReserveRegister
+          exportContainer={exportContainer}
           dataset={dataset}
           rows={rows}
           chips={chips}

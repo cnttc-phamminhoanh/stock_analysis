@@ -1,3 +1,7 @@
+import { colorCell } from '../../lib/exportExcel';
+import { createPortal } from 'react-dom';
+import ExportExcelButton from '../../components/ExportExcelButton';
+import type { ExportRow } from '../../lib/exportExcel';
 import { useEffect, useState } from 'react';
 
 import type { ReserveDataset, ReserveRegisterLine } from '@shared/api.interface';
@@ -21,6 +25,7 @@ const buildPageList = (pageCount: number, current: number): (number | 'gap')[] =
 };
 
 interface ReserveRegisterProps {
+  exportContainer: HTMLDivElement | null;
   dataset: ReserveDataset;
   rows: ReserveRegisterLine[];
   chips: ReserveChip[];
@@ -31,6 +36,7 @@ interface ReserveRegisterProps {
 }
 
 const ReserveRegister = ({
+  exportContainer,
   dataset,
   rows,
   chips,
@@ -62,6 +68,46 @@ const ReserveRegister = ({
 
   return (
     <div className="detail-body">
+      {exportContainer ? createPortal(
+        <ExportExcelButton name="Reserve Lot Details" disabled={!showTable}
+          columns={[
+            { header: 'Item 物料', width: 50 }, { header: 'Code 编码' },
+            { header: 'Lot / batch 批次' }, { header: 'Date' }, { header: 'Buyer 客户' },
+            { header: 'Reason_dl 原因', width: 36 }, { header: 'Link', width: 50 },
+            { header: 'Warehouse band 库龄段' }, { header: 'Age (mo) 月龄', numFmt: '0.0' },
+            { header: 'Value', numFmt: '$#,##0' },
+          ]}
+          format={(sheet, rows) => {
+            sheet.views = [{ state: 'frozen', xSplit: 1, ySplit: 1 }];
+            rows.forEach((row, index) => {
+              const band = RESERVE_BANDS.find((item) => item.label === row[7]) ??
+                (row[7] === '12+ months' ? RESERVE_BANDS[RESERVE_BANDS.length - 1] : undefined);
+              if (band) colorCell(sheet, index + 2, 8, band.ink);
+              if (typeof row[6] === 'string' && row[6].startsWith('http')) {
+                const cell = sheet.getCell(index + 2, 7);
+                cell.value = { text: row[6], hyperlink: row[6] };
+                cell.font = { name: 'Arial', size: 10, color: { argb: 'FF3D63B8' }, underline: true };
+              }
+              sheet.getRow(index + 2).height = 42;
+            });
+          }}
+          getRows={() => {
+            const data: ExportRow[] = ordered.map((line) => [
+              `${line.itemName ?? '—'}\n${line.categoryName ?? '—'}`,
+              line.goodsNo ?? '—', line.batchNo || '—', line.lotDate?.slice(0, 10) || '—',
+              line.buyer ?? '—', line.reasonDl || 'Not recorded',
+              line.reasonDl === null ? `http://172.18.1.12:4004/?goods_no=${encodeURIComponent(line.goodsNo ?? '')}&made_lot=${encodeURIComponent(line.batchNo ?? '')}` : '—',
+              line.ageBand || '—',
+              typeof line.ageMonths === 'number' && Number.isFinite(line.ageMonths) ? line.ageMonths : '—',
+              line.usd,
+            ]);
+            if (gap) data.push([
+              'Not itemised — lots in this selection without an item-level line',
+              '—', '—', '—', 'all buyers', 'not in detail feed', '—', gap.label, '—', gap.usd,
+            ]);
+            return data;
+          }} />
+      , exportContainer) : null}
       {chips.length > 0 ? (
         <div className="xfilter" role="status">
           <span className="xfilter-lead">Cross-filter</span>

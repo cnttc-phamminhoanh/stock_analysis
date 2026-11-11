@@ -1,3 +1,6 @@
+import { createPortal } from 'react-dom';
+import ExportExcelButton from '../../components/ExportExcelButton';
+import { EXPORT_LIMIT, type ExportRow } from '../../lib/exportExcel';
 import { Fragment, useEffect, useMemo, useState } from "react";
 import type { ChangeEvent, FormEvent, KeyboardEvent } from "react";
 
@@ -26,6 +29,7 @@ interface LedgerCellSelection {
 }
 
 interface PivotTableProps {
+  exportContainer: HTMLDivElement | null;
   stores: PivotStore[];
   meta: OverviewMeta;
   axis: MonthAxis;
@@ -78,6 +82,7 @@ const cellKeys =
   };
 
 const PivotTable = ({
+  exportContainer,
   stores,
   meta,
   axis,
@@ -193,6 +198,104 @@ const PivotTable = ({
 
   return (
     <div className="pivot-block">
+      {exportContainer ? createPortal(
+        <ExportExcelButton
+          name="Month Warehouse Ledger"
+          disabled={!available || flat.length === 0}
+          columns={[
+            { header: 'Warehouse 仓库', width: 36 },
+            { header: 'Category 类别' },
+            { header: 'Buyer 客户' },
+            ...shownMonths.flatMap((month) => [
+              { header: `${month} Qty`, numFmt: '#,##0' },
+              { header: `${month} USD`, numFmt: '#,##0' },
+            ]),
+            { header: 'Total Qty', numFmt: '#,##0' },
+            { header: 'Total USD', numFmt: '#,##0' },
+          ]}
+          format={(sheet, rows) => {
+            const count = shownMonths.length;
+            sheet.spliceRows(1, 0, []);
+            for (let col = 1; col <= 3; col += 1) {
+              sheet.getCell(1, col).value = sheet.getCell(2, col).value;
+              sheet.mergeCells(1, col, 2, col);
+            }
+            [...shownMonths, 'Total'].forEach((month, index) => {
+              const col = 4 + index * 2;
+              sheet.getCell(1, col).value = month;
+              sheet.mergeCells(1, col, 1, col + 1);
+              sheet.getCell(2, col).value = 'Qty';
+              sheet.getCell(2, col + 1).value = 'USD';
+            });
+            for (let row = 1; row <= 2; row += 1) {
+              sheet.getRow(row).height = 26;
+              for (let col = 1; col <= 5 + count * 2; col += 1) {
+                const cell = sheet.getCell(row, col);
+                if (cell.isMerged && cell.master.address !== cell.address) continue;
+                cell.font = { name: 'Arial', size: 10, bold: true, color: { argb: 'FF333E4E' } };
+                cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: row === 1 ? 'FFEEF0F4' : 'FFF5F6F8' } };
+                cell.alignment = { horizontal: col > 3 ? 'center' : 'left', vertical: 'middle' };
+              }
+            }
+            // Merge consecutive warehouses and categories using their original identities.
+            const source = flat.slice(0, rows.length - 1);
+            for (const col of [1, 2]) {
+              let start = 0;
+              while (start < source.length) {
+                let end = start + 1;
+                while (end < source.length && source[end].wh === source[start].wh &&
+                  (col === 1 || source[end].cat === source[start].cat)) end += 1;
+                if (end - start > 1) sheet.mergeCells(start + 3, col, end + 2, col);
+                start = end;
+              }
+            }
+            for (let row = 3; row <= sheet.rowCount; row += 1) {
+              for (let col = 4; col <= 5 + count * 2; col += 1) {
+                const cell = sheet.getCell(row, col);
+                cell.numFmt = '#,##0;-#,##0;"\u2013"';
+                if (cell.value == null || cell.value === '') cell.value = '\u2013';
+                if (col % 2 === 1) cell.font = { ...cell.font, color: { argb: 'FF5D6B7D' } };
+              }
+            }
+            const total = sheet.lastRow!;
+            total.height = 30;
+            total.eachCell({ includeEmpty: true }, (cell) => {
+              cell.font = { name: 'Arial', size: 10, bold: true, color: { argb: 'FF1B2432' } };
+              cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFEDF1F9' } };
+            });
+            sheet.mergeCells(total.number, 2, total.number, 3);
+            sheet.views = [{ state: 'frozen', xSplit: 1, ySplit: 2 }];
+          }}
+          getRows={() => {
+            // Reserve one row for totals, calculated only from the exported rows.
+            const rows: ExportRow[] = flat.slice(0, EXPORT_LIMIT - 1).map((row) => {
+              const warehouse = storeLabel(meta.warehouses[row.wh]);
+              return [
+                [warehouse.primary, warehouse.secondary].filter(Boolean).join(' - '),
+                meta.categories[row.cat]?.nameZh ?? '',
+                meta.customers[row.cust] ?? '',
+                ...shownMonths.flatMap((_month, j) => {
+                  const cell = at(row.cells, j);
+                  return [cell.qty ?? null, cell.usd ?? null];
+                }),
+                row.qty, row.usd,
+              ];
+            });
+            const total: ExportRow = ['Total 合计', null, null];
+            for (let col = 3; col < 5 + shownMonths.length * 2; col += 1) {
+              let sum: number | null = 0;
+              for (const row of rows) {
+                const value = row[col];
+                if (typeof value !== 'number') { sum = null; break; }
+                sum += value;
+              }
+              total.push(sum);
+            }
+            return [...rows, total];
+          }}
+        />, exportContainer,
+      ) : null}
+
       <div className="table-scroll">
         <table className="pivot">
           <thead>
