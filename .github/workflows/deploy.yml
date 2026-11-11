@@ -13,17 +13,19 @@ jobs:
       - name: Pull code
         run: |
           cd /home/it/stock_analysis
-          git pull --ff-only "https://x-access-token:${GITHUB_TOKEN}@github.com/cnttc-phamminhoanh/stock_analysis.git" master
+          git fetch --prune "https://x-access-token:${GITHUB_TOKEN}@github.com/cnttc-phamminhoanh/stock_analysis.git" master
+          git reset --hard FETCH_HEAD
+          git status --short
 
       - name: Install package
         run: |
           cd /home/it/stock_analysis/server_BI
-          npm install
+          npm ci --no-audit --no-fund
 
       - name: Install and bundle UI
         run: |
           cd /home/it/stock_analysis/client
-          npm install
+          npm ci --no-audit --no-fund
           npm run build
 
       - name: Restart server
